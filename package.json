@@ -1,0 +1,23 @@
+{
+  "name": "tetris-99-scoreboard",
+  "version": "0.8.0",
+  "description": "An electron scoreboard for Tetris 99 streamers",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": "https://github.com/mrasmus/tetris-99-scoreboard",
+  "keywords": [
+    "Tetris99"
+  ],
+  "author": "mrasmus",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "electron": "^4.0.4"
+  },
+  "dependencies": {
+    "electron-store": "^2.0.0",
+    "string-template": "^1.0.0",
+    "write": "^1.0.3"
+  }
+}

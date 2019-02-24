@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Tetris 99 Scoreboard</title>
+</head>
+
+<body>
+  <h3 id="result_text"></h3>
+  <h1>Tetris 99 Scoreboard</h1>
+
+  <script>
+    // You can also require other files to run in this process
+    const Format = require('string-template');
+    const Store = require('electron-store');
+    const writeFile = require('write');
+    const store = new Store();
+
+    var players = store.get('players', [{ 'name': "Player1", 'wins': 0, 'plays': 0, 'streak': 0, 'fakewins': 0, 'fakelosses': 0 }, { 'name': "Player2", 'wins': 0, 'plays': 0, 'streak': 0, 'fakewins': 0, 'fakelosses': 0 }]);
+    var fmtstring = store.get('fmtstring', 'Now Playing: {name} ({wins}/{plays}, {percent}%) [{streak} win streak] <!bug {fakelosses} fake losses | {fakewins} fake wins>');
+    var nowplaying = store.get('nowplaying', 0);
+
+    function addplayer() {
+      players.push({ 'name': "New Player", 'wins': 0, 'plays': 0, 'streak': 0, 'fakewins': 0, 'fakelosses': 0 });
+    }
+
+    for (var [i, player] of players.entries()) {
+      document.write(`<input onchange="update(this)" type="radio" name="nowplaying" data-field="nowplaying" data-player="${i}"${nowplaying == i ? " checked" : ""} />`);
+      document.write(`<input onchange="update(this)" data-field="name" data-player="${i}" value="${player.name}"> `);
+      document.write(`<input onchange="update(this)" size="4" data-field="wins" data-player="${i}" value="${player.wins}">/`);
+      document.write(`<input onchange="update(this)" size="4" data-field="plays" data-player="${i}" value="${player.plays}"> `);
+      document.write(`<span id="percent-${i}">${calcPercent(i)}</span>% `);
+      document.write(`<input onchange="update(this)" size="2" data-field="streak" data-player="${i}" value="${player.streak}">-streak `);
+      document.write(`(<input onchange="update(this)" size="2" data-field="fakewins" data-player="${i}" value="${player.fakewins}">fwins | `);
+      document.write(`<input onchange="update(this)" size="2" data-field="fakelosses" data-player="${i}" value="${player.fakelosses}">flosses)<br>`);
+    }
+
+    document.write(`  <br><button onclick="recwin()">Record Win</button><button onclick="recloss()">Record Loss</button><button
+    onclick="recfwin()">Record Fake Win</button><button onclick="recfloss()">Record Fake Loss</button><br>
+  <br><div id="confirm">${(new Date()).toLocaleTimeString()} started up.</div><br>Message Template:<br><input onchange="update(this)" id="msgformat" size=120>`);
+
+    document.getElementById("msgformat").value = fmtstring;
+    renderOutput();
+
+    function calcPercent(i) {
+      return (100 * players[i].wins / players[i].plays).toFixed(1);
+    }
+
+    function playerToStatus(i) {
+      players[i].percent = calcPercent(i);
+      return Format(fmtstring, players[i]);
+    }
+
+    function renderOutput() {
+      document.getElementById("result_text").innerText = playerToStatus(nowplaying);
+      for (var [i, player] of players.entries()) {
+        var status = playerToStatus(i);
+        writeFile(`${player.name}.txt`, status)
+        if (i == nowplaying) {
+          writeFile('currentplayer.txt', status)
+        }
+      }
+    }
+
+    function recwin() {
+      var w = document.body.querySelector(`input[data-player='${nowplaying}'][data-field='wins']`);
+      w.value = parseInt(w.value) + 1;
+      update(w);
+      var p = document.body.querySelector(`input[data-player='${nowplaying}'][data-field='plays']`);
+      p.value = parseInt(p.value) + 1;
+      update(p);
+      var s = document.body.querySelector(`input[data-player='${nowplaying}'][data-field='streak']`);
+      s.value = parseInt(s.value) + 1;
+      update(s);
+      renderPercent(nowplaying);
+      renderOutput();
+      document.getElementById("confirm").innerText = `${(new Date()).toLocaleTimeString()}: Recorded win.`;
+    }
+
+    function recloss() {
+      var p = document.body.querySelector(`input[data-player='${nowplaying}'][data-field='plays']`);
+      p.value = parseInt(p.value) + 1;
+      update(p);
+      var s = document.body.querySelector(`input[data-player='${nowplaying}'][data-field='streak']`);
+      s.value = 0;
+      update(s);
+      renderPercent(nowplaying);
+      renderOutput();
+      document.getElementById("confirm").innerText = `${(new Date()).toLocaleTimeString()}: Recorded loss.`;
+    }
+
+    function recfwin() {
+      var f = document.body.querySelector(`input[data-player='${nowplaying}'][data-field='fakewins']`);
+      f.value = parseInt(f.value) + 1;
+      update(f);
+      recwin();
+      document.getElementById("confirm").innerText = `${(new Date()).toLocaleTimeString()}: Recorded fake win.`;
+    }
+
+    function recfloss() {
+      var f = document.body.querySelector(`input[data-player='${nowplaying}'][data-field='fakelosses']`);
+      f.value = parseInt(f.value) + 1;
+      update(f);
+      recloss();
+      document.getElementById("confirm").innerText = `${(new Date()).toLocaleTimeString()}: Recorded fake loss.`;
+    }
+
+    function renderPercent(i) {
+      document.getElementById(`percent-${i}`).innerText = calcPercent(i);
+    }
+
+    function update(x) {
+      if (x.id == "msgformat") {
+        fmtstring = x.value;
+        store.set('fmtstring', fmtstring);
+      } else {
+        if (x.dataset.field == "nowplaying") {
+          nowplaying = x.dataset.player;
+          store.set('nowplaying', nowplaying);
+        } else {
+          players[x.dataset.player][x.dataset.field] = x.value;
+          store.set('players', players);
+        }
+        document.getElementById(`percent-${x.dataset.player}`).innerText = calcPercent(x.dataset.player);
+      }
+      console.log(players);
+
+      renderOutput();
+    };
+
+//=> undefined
+  </script>
+
+</body>
+
+</html>
