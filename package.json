@@ -13,7 +13,8 @@
   "author": "mrasmus",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^4.0.4"
+    "electron": "^4.0.4",
+    "electron-builder": "^20.38.5"
   },
   "dependencies": {
     "electron-store": "^2.0.0",

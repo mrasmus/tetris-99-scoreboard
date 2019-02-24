@@ -56,9 +56,9 @@
       document.getElementById("result_text").innerText = playerToStatus(nowplaying);
       for (var [i, player] of players.entries()) {
         var status = playerToStatus(i);
-        writeFile(`${player.name}.txt`, status)
+        writeFile(`output/${player.name}.txt`, status)
         if (i == nowplaying) {
-          writeFile('currentplayer.txt', status)
+          writeFile('output/currentplayer.txt', status)
         }
       }
     }
